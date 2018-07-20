@@ -9,7 +9,7 @@ namespace EventWayCore.Core
     {
         private static readonly JsonSerializerSettings SerializerSettings = new JsonSerializerSettings
         {
-            TypeNameHandling = TypeNameHandling.All,
+            TypeNameHandling = TypeNameHandling.None,
             ContractResolver = new ShouldSerializeContractResolver()
         };
 
@@ -21,7 +21,7 @@ namespace EventWayCore.Core
         public static object DeserializeEvent(this Event x)
         {
             var eventType = Type.GetType(x.EventType);
-            var deserializedPayload = JsonConvert.DeserializeObject(x.Payload, eventType, SerializerSettings);
+            var deserializedPayload = JsonConvert.DeserializeObject(x.Payload, eventType);
 
             if (deserializedPayload.GetType().IsSubclassOf(typeof(DomainEvent)))
             {
@@ -34,23 +34,12 @@ namespace EventWayCore.Core
 
         public static Event ToEventData(this object @event, string aggregateType, Guid aggregateId, int version)
         {
-            /*var eventHeaders = new Dictionary<string, object>
-            {
-                {
-                    "EventClrType", @event.GetType().AssemblyQualifiedName
-                }
-            };
-            var metadata = JsonConvert.SerializeObject(eventHeaders, SerializerSettings);
-            */
-
             string metadata = null;
 
             var data = JsonConvert.SerializeObject(@event, SerializerSettings);
             var eventId = CombGuid.Generate();
 
-            // TODO: Do we really need AssemblyQualifiedName?
-            //var eventType = @event.GetType().AssemblyQualifiedName;
-            var eventType = @event.GetType().Name;
+            var eventType = @event.GetType().AssemblyQualifiedName;
 
             return new Event
             {
